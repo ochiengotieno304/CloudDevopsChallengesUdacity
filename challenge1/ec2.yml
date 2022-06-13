@@ -1,0 +1,32 @@
+Resources:
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      GroupName: launch-wizard-5
+      VpcId: vpc-05e842f59f3d11fa0
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+  EC2InstanceServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: us-east-1
+      ImageId: ami-0022f774911c1d690
+      InstanceType: t2.micro
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: True
+          DeviceIndex: "0"
+      SecurityGroups:
+        - Ref: launch-wizard-5
+      SubnetId: subnet-00047692320efc29c
+      KeyName: volt
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo yum update -y
+          sudo yum install -y httpd
+          sudo systemctl start httpd
+          sudo systemctl enable httpd
