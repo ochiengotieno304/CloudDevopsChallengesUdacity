@@ -67,7 +67,7 @@ Resources:
     Type: AWS::EC2::NatGateway
     Properties:
       SubnetId: !Ref PublicSubnet
-      AllocationId: !GetAZs NatGatewayEIP.AllocationId
+      AllocationId: !GetAtt NatGatewayEIP.AllocationId
 
   NatGatewayEIP:
     Type: AWS::EC2::EIP
@@ -91,6 +91,18 @@ Resources:
         - Key: Name
           Value: !Sub ${EnvironmentName} Private Route Table
 
+  AssociatePUBRT:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+
+  AssociatePRIVRT:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet
+
   PublicRoute:
     Type: AWS::EC2::Route
     Properties:
@@ -104,5 +116,3 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref NatGateway
-
-
