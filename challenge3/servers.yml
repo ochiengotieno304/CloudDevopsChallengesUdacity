@@ -1,0 +1,56 @@
+Parameters:
+  AMItoUse:
+    Description: AMI base image
+    Type: String
+
+Resources:
+  IAMServerAccessRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  ServerInstanceProfile: 
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: !Ref IAMServerAccessRole
+
+  ServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http inbound traffic
+      VpcId: 
+        - Fn::ImportValue: !Sub "${EnvironmentName}-VPCID"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+          - IpProtocol: -1
+            FromPort: -1
+            ToPort: -1
+            CidrIp: 0.0.0.0/0
+
+  EC2Server:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: !Ref AMItoUse
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: "0"
+          GroupSet: 
+            - !Ref ServerSecurityGroup
+          SubnetId: 
+            - Fn::ImportValue: !Sub ${EnvironmentName}-PRI-SN
+  
